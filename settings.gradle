@@ -1,0 +1,3 @@
+include ':waveDisplayView'
+include ':app'
+rootProject.name = "WaveDisPlay"
