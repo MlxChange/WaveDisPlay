@@ -63,6 +63,7 @@ class WaveDisplayView @JvmOverloads constructor(
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         if (getChildAt(1) == child) {
             var path = Path()
+
             path.quadTo(controllX, controllY, 0f, height.toFloat())
             canvas.clipPath(path, Region.Op.DIFFERENCE)
 

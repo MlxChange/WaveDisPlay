@@ -6,28 +6,8 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <cn.mlx.widget.WaveDisplayView
+    <cn.mlx.wavedisplay.TestView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-
-        <TextView
-            android:textSize="40sp"
-            android:textColor="#fff"
-            android:text="mlmlmlmlmlmlmlmllmlmxlmxlmxlxmlxmxlmxlmlmxlxml"
-            android:background="@color/colorAccent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <TextView
-            android:textSize="40sp"
-            android:textColor="#fff"
-            android:text="sqsqsqsqsqqsqsqsqssqsqqsq"
-            android:background="@color/colorPrimary"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-
-    </cn.mlx.widget.WaveDisplayView>
+        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
