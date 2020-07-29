@@ -56,14 +56,13 @@ class TestView @JvmOverloads constructor(
     private var animator2: ObjectAnimator? = null
     private var animator = ObjectAnimator.ofFloat(this, "currentX", 1600f)
     private var animator3: ObjectAnimator? = null
-    private var animator4 = ObjectAnimator.ofFloat(this, "currentX", 170f)
+    private var animator4: ObjectAnimator? = null
 
     init {
         animator.interpolator = LinearInterpolator()
         animator.duration = 500
 
-        animator4.duration = 500
-        animator4.interpolator = OvershootInterpolator(3.2f)
+
 
         paint.color = Color.RED
         paint.isAntiAlias = true
@@ -97,7 +96,6 @@ class TestView @JvmOverloads constructor(
         var time = measureTimeMillis {
             if (showStart) {
                 canvas.save()
-                Log.i("zzz", "ondraw")
                 angle = (currentX - 30) / 140 * 0.5f
                 var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
                 var angle3 = sqrt(currentX)
@@ -198,7 +196,7 @@ class TestView @JvmOverloads constructor(
             MotionEvent.ACTION_MOVE -> {
                 currentX = event.x + 120f
                 currentY = event.y
-                drawArrow = true
+                drawArrow = currentX - 120f <= mwidth / 2
                 invalidate()
             }
             MotionEvent.ACTION_UP -> {
@@ -216,7 +214,11 @@ class TestView @JvmOverloads constructor(
                     }
                     animator.start()
                 } else {
-                    animator4.start()
+                    Log.i("zzz", "currentX:$currentX")
+                    animator4 = ObjectAnimator.ofFloat(this, "currentX", currentX, 170f)
+                    animator4?.duration = 800
+                    animator4?.interpolator = OvershootInterpolator(3.2f)
+                    animator4?.start()
                 }
             }
 
