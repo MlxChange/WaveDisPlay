@@ -53,7 +53,7 @@ class WaveDisplayView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_MOVE) {
             controllX = event.x * 2
-            controllY = event.y * 2
+            controllY = event.y
             invalidate()
         }
         return true
