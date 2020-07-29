@@ -1,19 +1,21 @@
 package cn.mlx.wavedisplay
 
+import android.animation.Keyframe
 import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.LinearInterpolator
+import android.view.animation.*
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.withSave
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.system.measureTimeMillis
 
 /**
  * Project:WaveDisPlay
@@ -28,13 +30,21 @@ class TestView @JvmOverloads constructor(
     var drawArrow = true
     var mwidth = 0
     var mheight = 0
-    var currentX = 240f
+    var currentX = 170f
         set(value) {
             field = value
             invalidate()
         }
     var currentY = 1200f
     var angle = 1f
+
+    var huitanX = 0f
+        set(value) {
+            field = value
+            invalidate()
+        }
+
+    var showStart = true
 
     var bianyuanX = 1f
         set(value) {
@@ -45,12 +55,15 @@ class TestView @JvmOverloads constructor(
 
     private var animator2: ObjectAnimator? = null
     private var animator = ObjectAnimator.ofFloat(this, "currentX", 1600f)
+    private var animator3: ObjectAnimator? = null
+    private var animator4 = ObjectAnimator.ofFloat(this, "currentX", 170f)
 
     init {
         animator.interpolator = LinearInterpolator()
-        animator.duration = 1000
+        animator.duration = 500
 
-
+        animator4.duration = 500
+        animator4.interpolator = OvershootInterpolator(3.2f)
 
         paint.color = Color.RED
         paint.isAntiAlias = true
@@ -58,75 +71,125 @@ class TestView @JvmOverloads constructor(
         paint.strokeJoin = Paint.Join.ROUND
         paint.style = Paint.Style.FILL_AND_STROKE
         paint.strokeWidth = 10f
+        var key0 = Keyframe.ofFloat(0f, 0f)
+        var key1 = Keyframe.ofFloat(0.5f, 300f)
+        var key2 = Keyframe.ofFloat(0.7f, 150f)
+        var key3 = Keyframe.ofFloat(1f, 0f)
+        var holder = PropertyValuesHolder.ofKeyframe("huitanX", key0, key1, key2, key3)
+        animator3 = ObjectAnimator.ofPropertyValuesHolder(this, holder)
+        animator3?.duration = 1000
+        animator3?.interpolator = BounceInterpolator()
 
+        animator3?.doOnEnd {
+            currentX = 200f
+            showStart = true
+            currentY = 1200f
+            bianyuanX = 1f
+            huitanX = 0f
+            drawArrow = true
+            invalidate()
+        }
     }
 
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.save()
-        angle = (currentX - 100) / 140 * 0.5f
-        var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
-        var angle3 = sqrt(currentX)
-        var angle4 = (currentX - 100) / 140 * 0.5f
-        angle = max(angle, 0.5f)
-        var pathEffect = CornerPathEffect(200f * angle)
+        var time = measureTimeMillis {
+            if (showStart) {
+                canvas.save()
+                Log.i("zzz", "ondraw")
+                angle = (currentX - 30) / 140 * 0.5f
+                var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
+                var angle3 = sqrt(currentX)
+                var angle4 = (currentX - 30) / 140 * 0.5f
+                angle = max(angle, 0.5f)
+                var pathEffect = CornerPathEffect(200f * angle)
 
 
-        paint.pathEffect = pathEffect
+                paint.pathEffect = pathEffect
 
-        path.moveTo((60 * angle4 * bianyuanX), 0f)
-        canvas.drawPath(path, paint)
-        paint.strokeWidth = 10f
-        paint.color = Color.RED
-        var length = (currentX - 50) / 2f
-        length = max(length, (280 - 50) / 2f)
-        var shangY = currentY - length
-        path.lineTo((60 * angle4 * bianyuanX).toFloat(), shangY)
-        path.lineTo(currentX, shangY + length)
-        path.lineTo((60 * angle4 * bianyuanX).toFloat(), shangY + length * 2)
-        path.lineTo((60 * angle4 * bianyuanX).toFloat(), mheight.toFloat())
-        canvas.drawPath(path, paint)
-        canvas.restore()
-        canvas.save()
+                path.moveTo((60 * angle4 * bianyuanX), 0f)
+                canvas.drawPath(path, paint)
+                paint.strokeWidth = 10f
+                paint.color = Color.RED
+                var length = (currentX) / 1.7f
+                length = max(length, (170) / 1.7f)
+                var shangY = currentY - length
+                path.lineTo((60 * angle4 * bianyuanX).toFloat(), shangY)
+                path.lineTo(currentX, shangY + length)
+                path.lineTo((60 * angle4 * bianyuanX).toFloat(), shangY + length * 2)
+                path.lineTo((60 * angle4 * bianyuanX).toFloat(), mheight.toFloat())
+                canvas.drawPath(path, paint)
+                canvas.restore()
 
-        paint.pathEffect = CornerPathEffect(0f)
-        var path2 = Path()
-        path2.addRect(0f, 0f, (60 * angle4 * bianyuanX), mheight.toFloat(), Path.Direction.CCW)
-        canvas.drawPath(path2, paint)
-        path.reset()
 
-        var paint2 = Paint()
-        paint2.setColor(Color.BLUE)
-        paint2.strokeWidth = 5f
-        paint2.isAntiAlias = true
-        paint2.style = Paint.Style.STROKE
-        paint2.strokeJoin = Paint.Join.ROUND
-        paint2.strokeCap = Paint.Cap.ROUND
-        var heardPath = Path()
-        heardPath.addCircle(
-            (currentX - (20f * angle2) - angle * angle3).toFloat(),
-            currentY,
-            45f,
-            Path.Direction.CCW
-        )
-        paint2.pathEffect = CornerPathEffect(30f)
-        heardPath.moveTo(
-            ((currentX - (20f * angle2) - angle * angle3) - 5f).toFloat(),
-            currentY - 22.5f
-        )
-        heardPath.lineTo(((currentX - (20f * angle2) - angle * angle3) + 20f).toFloat(), currentY)
-        heardPath.lineTo(
-            ((currentX - (20f * angle2) - angle * angle3) - 5f).toFloat(),
-            currentY + 22.5f
-        )
-        if (currentX > 35f) {
-            if (drawArrow) {
-                canvas.drawPath(heardPath, paint2)
+                canvas.save()
+                paint.pathEffect = CornerPathEffect(0f)
+                var path2 = Path()
+                path2.addRect(
+                    0f,
+                    0f,
+                    (60 * angle4 * bianyuanX),
+                    mheight.toFloat(),
+                    Path.Direction.CCW
+                )
+                canvas.drawPath(path2, paint)
+                path.reset()
+
+                var paint2 = Paint()
+                paint2.setColor(Color.WHITE)
+                paint2.strokeWidth = 5f
+                paint2.isAntiAlias = true
+                paint2.style = Paint.Style.STROKE
+                paint2.strokeJoin = Paint.Join.ROUND
+                paint2.strokeCap = Paint.Cap.ROUND
+                var heardPath = Path()
+                heardPath.addCircle(
+                    (currentX - (17f * angle2) - angle * angle3).toFloat(),
+                    currentY,
+                    40f,
+                    Path.Direction.CCW
+                )
+                paint2.pathEffect = CornerPathEffect(30f)
+                heardPath.moveTo(
+                    ((currentX - (17f * angle2) - angle * angle3) - 5f).toFloat(),
+                    currentY - 18f
+                )
+                heardPath.lineTo(
+                    ((currentX - (17f * angle2) - angle * angle3) + 15f).toFloat(),
+                    currentY
+                )
+                heardPath.lineTo(
+                    ((currentX - (17f * angle2) - angle * angle3) - 5f).toFloat(),
+                    currentY + 18f
+                )
+                if (currentX > 35f) {
+                    if (drawArrow) {
+                        canvas.drawPath(heardPath, paint2)
+                    }
+
+                }
+                canvas.restore()
+            } else {
+                canvas.save()
+                var endPath = Path()
+                endPath.lineTo(mwidth.toFloat(), 0f)
+                endPath.quadTo(
+                    (mwidth - huitanX).toFloat(),
+                    currentY,
+                    mwidth.toFloat(),
+                    mheight.toFloat()
+                )
+                endPath.lineTo(0f, mheight.toFloat())
+                var paint5 = Paint()
+                paint5.style = Paint.Style.FILL
+                paint5.color = Color.RED
+                paint5.isAntiAlias = true
+                canvas.drawPath(endPath, paint5)
             }
 
         }
-        canvas.restore()
+
     }
 
 
@@ -145,15 +208,26 @@ class TestView @JvmOverloads constructor(
                         var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
                         var angle3 = sqrt(currentX)
                         if ((currentX - (20f * angle2) - angle * angle3).toInt() >= mwidth - 350) {
-                            Log.i("zzz", "currentX:$currentX")
+
                             animator.cancel()
+                            currentX - 300
                             animator2?.start()
                         }
                     }
                     animator.start()
-
+                } else {
+                    animator4.start()
                 }
             }
+
+            MotionEvent.ACTION_DOWN -> {
+                if (!showStart) {
+                    currentY = event.y
+                    animator3?.start()
+                } else {
+                }
+            }
+
         }
 
         return true
@@ -166,8 +240,12 @@ class TestView @JvmOverloads constructor(
         mheight = h
 
         animator2 = ObjectAnimator.ofFloat(this, "bianyuanX", 5.2f)
-        animator2?.duration = 500
-        animator2?.interpolator = DecelerateInterpolator()
+        animator2?.duration = 300
+        animator2?.interpolator = LinearInterpolator()
+        animator2?.doOnEnd {
+            showStart = false
+            animator3?.start()
+        }
     }
 
 }
