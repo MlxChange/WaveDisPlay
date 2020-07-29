@@ -22,8 +22,13 @@ class TestView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private var contentPath = Path()
+    private var arrowPaint = Paint()
     private var mainPaint = Paint()
+
+    private var contentPath = Path()
+    private var coverPath = Path()
+    private var arrowPath = Path()
+
     var drawArrow = true
     var mwidth = 0
     var mheight = 0
@@ -68,6 +73,13 @@ class TestView @JvmOverloads constructor(
         mainPaint.strokeJoin = Paint.Join.ROUND
         mainPaint.style = Paint.Style.FILL_AND_STROKE
         mainPaint.strokeWidth = 10f
+
+        arrowPaint.setColor(Color.WHITE)
+        arrowPaint.strokeWidth = 5f
+        arrowPaint.isAntiAlias = true
+        arrowPaint.style = Paint.Style.STROKE
+        arrowPaint.strokeJoin = Paint.Join.ROUND
+        arrowPaint.strokeCap = Paint.Cap.ROUND
 
         val key0 = Keyframe.ofFloat(0f, 0f)
         val key1 = Keyframe.ofFloat(0.5f, 300f)
@@ -123,50 +135,47 @@ class TestView @JvmOverloads constructor(
 
                 canvas.save()
                 mainPaint.pathEffect = CornerPathEffect(0f)
-                var path2 = Path()
-                path2.addRect(
+
+                coverPath.addRect(
                     0f,
                     0f,
                     ( fringeOffset * fringeOffsetSpeed),
                     mheight.toFloat(),
                     Path.Direction.CCW
                 )
-                canvas.drawPath(path2, mainPaint)
+                canvas.drawPath(coverPath, mainPaint)
+                coverPath.reset()
                 contentPath.reset()
 
-                var paint2 = Paint()
-                paint2.setColor(Color.WHITE)
-                paint2.strokeWidth = 5f
-                paint2.isAntiAlias = true
-                paint2.style = Paint.Style.STROKE
-                paint2.strokeJoin = Paint.Join.ROUND
-                paint2.strokeCap = Paint.Cap.ROUND
-                var heardPath = Path()
-                heardPath.addCircle(
+
+
+
+                arrowPath.addCircle(
                     (currentX - arrowOffset).toFloat(),
                     currentY,
                     40f,
                     Path.Direction.CCW
                 )
-                paint2.pathEffect = CornerPathEffect(30f)
-                heardPath.moveTo(
+                arrowPaint.pathEffect = CornerPathEffect(30f)
+                arrowPath.moveTo(
                     ((currentX -  arrowOffset) - 5f).toFloat(),
                     currentY - 18f
                 )
-                heardPath.lineTo(
+                arrowPath.lineTo(
                     ((currentX -  arrowOffset ) + 15f).toFloat(),
                     currentY
                 )
-                heardPath.lineTo(
+                arrowPath.lineTo(
                     ((currentX - arrowOffset) - 5f).toFloat(),
                     currentY + 18f
                 )
                 if (currentX > 35f) {
                     if (drawArrow) {
-                        canvas.drawPath(heardPath, paint2)
+                        canvas.drawPath(arrowPath, arrowPaint)
                     }
 
                 }
+                arrowPath.reset()
                 canvas.restore()
             } else {
                 canvas.save()
@@ -239,8 +248,6 @@ class TestView @JvmOverloads constructor(
         super.onSizeChanged(w, h, oldw, oldh)
         mwidth = w
         mheight = h
-
-
     }
 
 }
