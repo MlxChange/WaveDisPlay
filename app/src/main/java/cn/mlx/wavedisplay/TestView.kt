@@ -35,7 +35,12 @@ class TestView @JvmOverloads constructor(
         }
     var currentY = 1200f
 
-    var angle = 1f
+    var cornerAngle = 1f
+
+    var angle2 = 0.0
+    var angle3 = 0f
+    var angle4 = 0f
+    lateinit var pathEffect: PathEffect
 
     private var reboundOffsetX = 0f
         set(value) {
@@ -95,13 +100,12 @@ class TestView @JvmOverloads constructor(
         var time = measureTimeMillis {
             if (showStartScreen) {
                 canvas.save()
-                angle = (currentX - 30) / 140 * 0.5f
-                var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
-                var angle3 = sqrt(currentX)
-                var angle4 = (currentX - 30) / 140 * 0.5f
-                angle = max(angle, 0.5f)
-                var pathEffect = CornerPathEffect(200f * angle)
-
+                cornerAngle = (currentX - 30) / 140 * 0.5f
+                angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
+                angle3 = sqrt(currentX)
+                angle4 = (currentX - 30) / 140 * 0.5f
+                cornerAngle = max(cornerAngle, 0.5f)
+                pathEffect = CornerPathEffect(200f * cornerAngle)
 
                 mainPaint.pathEffect = pathEffect
 
@@ -112,10 +116,10 @@ class TestView @JvmOverloads constructor(
                 var length = (currentX) / 1.7f
                 length = max(length, (170) / 1.7f)
                 var shangY = currentY - length
-                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed).toFloat(), shangY)
+                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed), shangY)
                 contentPath.lineTo(currentX, shangY + length)
-                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed).toFloat(), shangY + length * 2)
-                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed).toFloat(), mheight.toFloat())
+                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed), shangY + length * 2)
+                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed), mheight.toFloat())
                 canvas.drawPath(contentPath, mainPaint)
                 canvas.restore()
 
@@ -142,22 +146,22 @@ class TestView @JvmOverloads constructor(
                 paint2.strokeCap = Paint.Cap.ROUND
                 var heardPath = Path()
                 heardPath.addCircle(
-                    (currentX - (17f * angle2) - angle * angle3).toFloat(),
+                    (currentX - (17f * angle2) - cornerAngle * angle3).toFloat(),
                     currentY,
                     40f,
                     Path.Direction.CCW
                 )
                 paint2.pathEffect = CornerPathEffect(30f)
                 heardPath.moveTo(
-                    ((currentX - (17f * angle2) - angle * angle3) - 5f).toFloat(),
+                    ((currentX - (17f * angle2) - cornerAngle * angle3) - 5f).toFloat(),
                     currentY - 18f
                 )
                 heardPath.lineTo(
-                    ((currentX - (17f * angle2) - angle * angle3) + 15f).toFloat(),
+                    ((currentX - (17f * angle2) - cornerAngle * angle3) + 15f).toFloat(),
                     currentY
                 )
                 heardPath.lineTo(
-                    ((currentX - (17f * angle2) - angle * angle3) - 5f).toFloat(),
+                    ((currentX - (17f * angle2) - cornerAngle * angle3) - 5f).toFloat(),
                     currentY + 18f
                 )
                 if (currentX > 35f) {
@@ -204,7 +208,7 @@ class TestView @JvmOverloads constructor(
                     touchMoveAnimatorX.addUpdateListener {
                         var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
                         var angle3 = sqrt(currentX)
-                        if ((currentX - (20f * angle2) - angle * angle3).toInt() >= mwidth - 350) {
+                        if ((currentX - (20f * angle2) - cornerAngle * angle3).toInt() >= mwidth - 350) {
 
                             touchMoveAnimatorX.cancel()
                             currentX - 300
@@ -225,7 +229,6 @@ class TestView @JvmOverloads constructor(
                 if (!showStartScreen) {
                     currentY = event.y
                     reboundAnimator?.start()
-                } else {
                 }
             }
 
