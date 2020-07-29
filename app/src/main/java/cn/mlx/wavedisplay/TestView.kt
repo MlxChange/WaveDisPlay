@@ -6,7 +6,6 @@ import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.*
@@ -34,12 +33,11 @@ class TestView @JvmOverloads constructor(
             invalidate()
         }
     var currentY = 1200f
-
+    var protrudingRadius=0f
     var cornerAngle = 1f
 
-    var angle2 = 0.0
-    var angle3 = 0f
-    var angle4 = 0f
+    var arrowOffset = 0.0
+    var fringeOffset = 0f
     lateinit var pathEffect: PathEffect
 
     private var reboundOffsetX = 0f
@@ -58,13 +56,11 @@ class TestView @JvmOverloads constructor(
 
 
     private var fringeOffsetAnimator: ObjectAnimator? = null
-    private var touchMoveAnimatorX = ObjectAnimator.ofFloat(this, "currentX", 1600f)
+    private var touchMoveAnimatorX : ObjectAnimator?=null
     private var reboundAnimator: ObjectAnimator? = null
     private var dragAnimator: ObjectAnimator? = null
 
     init {
-        touchMoveAnimatorX.interpolator = LinearInterpolator()
-        touchMoveAnimatorX.duration = 500
 
         mainPaint.color = Color.RED
         mainPaint.isAntiAlias = true
@@ -73,11 +69,11 @@ class TestView @JvmOverloads constructor(
         mainPaint.style = Paint.Style.FILL_AND_STROKE
         mainPaint.strokeWidth = 10f
 
-        var key0 = Keyframe.ofFloat(0f, 0f)
-        var key1 = Keyframe.ofFloat(0.5f, 300f)
-        var key2 = Keyframe.ofFloat(0.7f, 150f)
-        var key3 = Keyframe.ofFloat(1f, 0f)
-        var holder = PropertyValuesHolder.ofKeyframe("huitanX", key0, key1, key2, key3)
+        val key0 = Keyframe.ofFloat(0f, 0f)
+        val key1 = Keyframe.ofFloat(0.5f, 300f)
+        val key2 = Keyframe.ofFloat(0.7f, 150f)
+        val key3 = Keyframe.ofFloat(1f, 0f)
+        val holder = PropertyValuesHolder.ofKeyframe("reboundOffsetX", key0, key1, key2, key3)
 
         reboundAnimator = ObjectAnimator.ofPropertyValuesHolder(this, holder)
         reboundAnimator?.duration = 1000
@@ -101,25 +97,26 @@ class TestView @JvmOverloads constructor(
             if (showStartScreen) {
                 canvas.save()
                 cornerAngle = (currentX - 30) / 140 * 0.5f
-                angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
-                angle3 = sqrt(currentX)
-                angle4 = (currentX - 30) / 140 * 0.5f
+                arrowOffset = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())*17f+sqrt(currentX)*cornerAngle
+
+                fringeOffset = (currentX - 30) / 140 * 30f
                 cornerAngle = max(cornerAngle, 0.5f)
                 pathEffect = CornerPathEffect(200f * cornerAngle)
 
                 mainPaint.pathEffect = pathEffect
 
-                contentPath.moveTo((60 * angle4 * fringeOffsetSpeed), 0f)
+                contentPath.moveTo(( fringeOffset * fringeOffsetSpeed), 0f)
                 canvas.drawPath(contentPath, mainPaint)
                 mainPaint.strokeWidth = 10f
                 mainPaint.color = Color.RED
-                var length = (currentX) / 1.7f
-                length = max(length, (170) / 1.7f)
-                var shangY = currentY - length
-                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed), shangY)
-                contentPath.lineTo(currentX, shangY + length)
-                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed), shangY + length * 2)
-                contentPath.lineTo((60 * angle4 * fringeOffsetSpeed), mheight.toFloat())
+                protrudingRadius = (currentX) / 1.7f
+                protrudingRadius = max(protrudingRadius, (170) / 1.7f)
+
+                contentPath.lineTo(( fringeOffset * fringeOffsetSpeed), currentY - protrudingRadius)
+                contentPath.lineTo(currentX, currentY - protrudingRadius + protrudingRadius)
+                contentPath.lineTo(( fringeOffset * fringeOffsetSpeed), currentY - protrudingRadius + protrudingRadius * 2)
+                contentPath.lineTo(( fringeOffset * fringeOffsetSpeed), mheight.toFloat())
+
                 canvas.drawPath(contentPath, mainPaint)
                 canvas.restore()
 
@@ -130,7 +127,7 @@ class TestView @JvmOverloads constructor(
                 path2.addRect(
                     0f,
                     0f,
-                    (60 * angle4 * fringeOffsetSpeed),
+                    ( fringeOffset * fringeOffsetSpeed),
                     mheight.toFloat(),
                     Path.Direction.CCW
                 )
@@ -146,22 +143,22 @@ class TestView @JvmOverloads constructor(
                 paint2.strokeCap = Paint.Cap.ROUND
                 var heardPath = Path()
                 heardPath.addCircle(
-                    (currentX - (17f * angle2) - cornerAngle * angle3).toFloat(),
+                    (currentX - arrowOffset).toFloat(),
                     currentY,
                     40f,
                     Path.Direction.CCW
                 )
                 paint2.pathEffect = CornerPathEffect(30f)
                 heardPath.moveTo(
-                    ((currentX - (17f * angle2) - cornerAngle * angle3) - 5f).toFloat(),
+                    ((currentX -  arrowOffset) - 5f).toFloat(),
                     currentY - 18f
                 )
                 heardPath.lineTo(
-                    ((currentX - (17f * angle2) - cornerAngle * angle3) + 15f).toFloat(),
+                    ((currentX -  arrowOffset ) + 15f).toFloat(),
                     currentY
                 )
                 heardPath.lineTo(
-                    ((currentX - (17f * angle2) - cornerAngle * angle3) - 5f).toFloat(),
+                    ((currentX - arrowOffset) - 5f).toFloat(),
                     currentY + 18f
                 )
                 if (currentX > 35f) {
@@ -204,36 +201,36 @@ class TestView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_UP -> {
                 if (currentX - 120f > mwidth / 2) {
+                    touchMoveAnimatorX= ObjectAnimator.ofFloat(this,"currentX",1600f)
+                    touchMoveAnimatorX?.interpolator = LinearInterpolator()
+                    touchMoveAnimatorX?.duration = 500
                     drawArrow = false
-                    touchMoveAnimatorX.addUpdateListener {
+                    fringeOffsetAnimator = ObjectAnimator.ofFloat(this, "fringeOffsetSpeed", 1.1f,5.2f)
+                    fringeOffsetAnimator?.duration = 300
+                    fringeOffsetAnimator?.interpolator = LinearInterpolator()
+                    fringeOffsetAnimator?.doOnEnd {
+                        showStartScreen = false
+                        reboundAnimator?.start()
+                    }
+                    touchMoveAnimatorX?.addUpdateListener {
                         var angle2 = Math.pow(currentX.toDouble(), (1.0f / 3).toDouble())
                         var angle3 = sqrt(currentX)
                         if ((currentX - (20f * angle2) - cornerAngle * angle3).toInt() >= mwidth - 350) {
 
-                            touchMoveAnimatorX.cancel()
+                            touchMoveAnimatorX?.cancel()
                             currentX - 300
                             fringeOffsetAnimator?.start()
                         }
                     }
-                    touchMoveAnimatorX.start()
+                    touchMoveAnimatorX?.start()
                 } else {
-                    Log.i("zzz", "currentX:$currentX")
                     dragAnimator = ObjectAnimator.ofFloat(this, "currentX", currentX, 170f)
                     dragAnimator?.duration = 800
                     dragAnimator?.interpolator = OvershootInterpolator(3.2f)
                     dragAnimator?.start()
                 }
             }
-
-            MotionEvent.ACTION_DOWN -> {
-                if (!showStartScreen) {
-                    currentY = event.y
-                    reboundAnimator?.start()
-                }
-            }
-
         }
-
         return true
     }
 
@@ -243,13 +240,7 @@ class TestView @JvmOverloads constructor(
         mwidth = w
         mheight = h
 
-        fringeOffsetAnimator = ObjectAnimator.ofFloat(this, "fringeOffsetSpeed", 5.2f)
-        fringeOffsetAnimator?.duration = 300
-        fringeOffsetAnimator?.interpolator = LinearInterpolator()
-        fringeOffsetAnimator?.doOnEnd {
-            showStartScreen = false
-            reboundAnimator?.start()
-        }
+
     }
 
 }
