@@ -2,8 +2,10 @@ package cn.mlx.widget
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.database.Observable
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +16,7 @@ import androidx.core.animation.doOnStart
 import androidx.core.view.children
 import kotlin.math.abs
 import kotlin.math.max
+
 
 /**
  * Project:NetEasy
@@ -53,6 +56,7 @@ class WaveDisplayView @JvmOverloads constructor(
 
     private val touchMoveAnimator = ValueAnimator.ofFloat(0f, 1f)
     private val dragReboundAnimator = ValueAnimator.ofFloat(0f, 1f)
+    private val dragGenerateAnimator = ValueAnimator.ofFloat(0f, 1f)
 
     var dragToLeftOffset = 0f
     var moveFringeOffset = 0f
@@ -64,6 +68,7 @@ class WaveDisplayView @JvmOverloads constructor(
     var dragReboundX = 0f
 
     var touchDragButton = false
+    var canTouchDrag = true
 
     init {
 
@@ -91,17 +96,14 @@ class WaveDisplayView @JvmOverloads constructor(
             invalidate()
         }
         touchMoveAnimator.doOnEnd {
-            this.postDelayed({
-                currentX = mwidth - 140f
-                currentY = 1200f
-                fringeOffset = 30f
-                drawArrow = true
-                dragToLeftOffset = 0f
-                moveFringeOffset = 0f
-                touchToLeftOffset = 0f
-                fringeToLeftLength = 0f
-                invalidate()
-            }, 2000)
+            fringeOffset = 30f
+            currentX = mwidth
+            drawArrow = true
+            dragToLeftOffset = 0f
+            moveFringeOffset = 0f
+            touchToLeftOffset = 0f
+            fringeToLeftLength = 0f
+            this.postDelayed({ dragGenerateAnimator.start() }, 500)
         }
 
 
@@ -114,6 +116,21 @@ class WaveDisplayView @JvmOverloads constructor(
         dragReboundAnimator.addUpdateListener {
             currentX = dragReboundX + it.animatedValue as Float * reboundLength
             invalidate()
+        }
+
+
+
+        dragGenerateAnimator.duration = 1000
+        dragGenerateAnimator.doOnStart {
+            canTouchDrag = false
+        }
+        dragGenerateAnimator.interpolator = OvershootInterpolator()
+        dragGenerateAnimator.addUpdateListener {
+            currentX = mwidth - 140f * it.animatedValue as Float
+            invalidate()
+        }
+        dragGenerateAnimator.doOnEnd {
+            canTouchDrag = true
         }
     }
 
@@ -142,22 +159,32 @@ class WaveDisplayView @JvmOverloads constructor(
         return true
     }
 
-    override fun dispatchDraw(canvas: Canvas?) {
-        super.dispatchDraw(canvas)
-    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
+                Log.i("zzz", "currentY:${touchDragButton}")
                 if (touchDragButton) {
                     currentX = max(mwidth / 3, event.x)
-                    currentY = event.y
+
+                    currentY = when {
+                        event.y > mheight - 80 -> {
+                            mheight - 80
+                        }
+                        event.y < 80 -> {
+                            80f
+                        }
+                        else -> {
+                            event.y
+                        }
+                    }
                     drawArrow = currentX >= mwidth / 2
                     invalidate()
                 }
             }
             MotionEvent.ACTION_DOWN -> {
-                touchDragButton = !(currentX - event.x > 30 || abs(event.y - currentY) > 50)
+                touchDragButton =
+                    !(currentX - event.x > 30 || abs(event.y - currentY) > 50 || !canTouchDrag)
             }
             MotionEvent.ACTION_UP -> {
                 if (touchDragButton) {
@@ -176,7 +203,6 @@ class WaveDisplayView @JvmOverloads constructor(
 
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         if (getChildAt(1) == child) {
-
             canvas.save()
             if (drawArrow) {
                 arrowPath.addCircle(
@@ -276,6 +302,49 @@ class WaveDisplayView @JvmOverloads constructor(
 
     override fun generateLayoutParams(attrs: AttributeSet?): LayoutParams {
         return MarginLayoutParams(context, attrs)
+    }
+
+    abstract class WaveAdapter <VH:ViewHolder >{
+
+        private val mObservable: AdapterDataObservable = AdapterDataObservable()
+
+        abstract fun createViewHolder(parent:ViewGroup,type:Int): ViewHolder
+
+        abstract fun bindViewHolder(holder:ViewHolder,position:Int)
+
+        abstract fun getItemCount():Int
+
+        fun notifyDataSetChanged(){
+            mObservable.notifyChanged()
+        }
+
+        fun registerObserver(observer: AdapterDataObserver?) {
+            mObservable.registerObserver(observer)
+        }
+    }
+
+    abstract class ViewHolder(var itemView: View) {
+        var position: Int = 0
+        fun getContext(): Context {
+            return itemView.context
+        }
+    }
+
+    class AdapterDataObservable: Observable<AdapterDataObserver>() {
+
+        fun hasObservers(): Boolean {
+            return mObservers.isNotEmpty()
+        }
+
+        fun notifyChanged() {
+            for (i in mObservers.size - 1 downTo 0) {
+                mObservers[i].onChanged()
+            }
+        }
+    }
+
+    abstract class AdapterDataObserver {
+        fun onChanged() {}
     }
 
 }
