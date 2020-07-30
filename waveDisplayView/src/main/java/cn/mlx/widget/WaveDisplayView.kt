@@ -33,7 +33,6 @@ class WaveDisplayView <T> @JvmOverloads constructor(
     var viewList= mutableListOf<View>()
     lateinit var mAdapter:WaveAdapter<T>
     private val mObserver: AdapterDataObserver = object :AdapterDataObserver(){
-
         override fun onChanged() {
             refreshView()
         }
@@ -309,7 +308,7 @@ class WaveDisplayView <T> @JvmOverloads constructor(
 
     fun setAdapter(adapter:WaveAdapter<T>){
         mAdapter=adapter
-        mAdapter.registerObserver(this)
+        mAdapter.registerObserver(mObserver)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
