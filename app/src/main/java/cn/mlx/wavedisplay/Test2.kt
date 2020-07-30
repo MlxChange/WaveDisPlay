@@ -16,6 +16,7 @@ import android.view.animation.OvershootInterpolator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.graphics.withSave
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -40,7 +41,7 @@ class Test2 @JvmOverloads constructor(
 
     private var arrowPaint = Paint()
 
-    var fringeOffset = 30f
+    var fringeOffset = 40f
 
     private var touchMoveAnimatorX = ValueAnimator.ofFloat(0f, 1f)
     private var dragAnimator = ValueAnimator.ofFloat(0f, 1f)
@@ -53,6 +54,8 @@ class Test2 @JvmOverloads constructor(
 
     var currentDrag = 0f
     var dragX = 0f
+
+    var touchDrag = false
 
     private var fringeOffsetSpeed = 1f
         set(value) {
@@ -81,7 +84,7 @@ class Test2 @JvmOverloads constructor(
             invalidate()
         }
         touchMoveAnimatorX.doOnEnd {
-            currentX = mwidth - 120f
+            currentX = mwidth - 140f
             currentY = 1200f
             fringeOffset = 30f
             drawArrow = true
@@ -92,7 +95,7 @@ class Test2 @JvmOverloads constructor(
         }
 
         dragAnimator.doOnStart {
-            currentDrag = mwidth - currentX - 120
+            currentDrag = mwidth - currentX - 140
             dragX = currentX
         }
         dragAnimator.duration = 700
@@ -105,9 +108,7 @@ class Test2 @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-
         canvas.save()
-        //currentX = max(mwidth / 4, currentX)
         var touchWidth = mwidth - 30f - currentX
         var touchHeight = touchWidth / 0.7f
         if (touchWidth < 90) {
@@ -154,18 +155,7 @@ class Test2 @JvmOverloads constructor(
         paint.color = Color.RED
         paint.style = Paint.Style.FILL_AND_STROKE
         canvas.drawPath(path, paint)
-        paint.color = Color.BLACK
-        canvas.drawCircle(fitstValuePointf.x, fitstValuePointf.y, 5f, paint)
-        canvas.drawCircle(secondValuePointf.x, secondValuePointf.y, 5f, paint)
-        canvas.drawCircle(valuePointF3.x, valuePointF3.y, 5f, paint)
-
-        paint.color = Color.BLUE
-        canvas.drawCircle(topcon1.x, topcon1.y, 5f, paint)
-        paint.color = Color.GREEN
-        canvas.drawCircle(topcon2.x, topcon2.y, 5f, paint)
-        canvas.drawCircle(bottom1.x, bottom1.y, 5f, paint)
-        paint.color = Color.BLUE
-        canvas.drawCircle(bottom2.x, bottom2.y, 5f, paint)
+        path.reset()
         canvas.restore()
 
         canvas.save()
@@ -201,31 +191,36 @@ class Test2 @JvmOverloads constructor(
         super.onSizeChanged(w, h, oldw, oldh)
         mwidth = w.toFloat()
         mheight = h.toFloat()
-        currentX = mwidth - 120f
+        currentX = mwidth - 140f
         currentY = 1200f
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
-                currentX = max(mwidth / 3, event.x)
-                currentY = event.y
-                drawArrow = currentX >= mwidth / 2
-                invalidate()
+                if (touchDrag) {
+                    currentX = max(mwidth / 3, event.x)
+                    currentY = event.y
+                    drawArrow = currentX >= mwidth / 2
+                    invalidate()
+                }
             }
             MotionEvent.ACTION_DOWN -> {
+                touchDrag = !(currentX - event.x > 30 || abs(event.y - currentY) > 50)
+                Log.i("zzz", "touch:$touchDrag")
             }
             MotionEvent.ACTION_UP -> {
-                if (currentX < mwidth / 2) {
-                    drawArrow = false
-                    touchMoveAnimatorX.start()
-                } else {
-                    dragAnimator.start()
+                if (touchDrag) {
+                    if (currentX < mwidth / 2) {
+                        drawArrow = false
+                        touchMoveAnimatorX.start()
+                    } else {
+                        dragAnimator.start()
+                    }
                 }
             }
         }
         return true
-
     }
 
 
