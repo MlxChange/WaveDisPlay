@@ -6,8 +6,28 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <cn.mlx.wavedisplay.Test2
+    <cn.mlx.widget.WaveDisplayView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+
+        <TextView
+            android:background="#D1B6E1"
+            android:textSize="20sp"
+            android:textColor="#fff"
+            android:text="爱司琪爱生命爱司琪爱生命爱司琪爱生命爱司琪爱生命爱司琪爱生命"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:background="#58C9B9"
+            android:textSize="20sp"
+            android:textColor="#fff"
+            android:text="马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
+    </cn.mlx.widget.WaveDisplayView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
