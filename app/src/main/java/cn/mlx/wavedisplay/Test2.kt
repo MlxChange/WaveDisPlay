@@ -1,24 +1,17 @@
 package cn.mlx.wavedisplay
 
-import android.animation.Keyframe
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.BounceInterpolator
-import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
-import androidx.core.graphics.withSave
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Project:WaveDisPlay
@@ -33,6 +26,7 @@ class Test2 @JvmOverloads constructor(
     var currentY = 0f
 
     private var arrowPath = Path()
+    private var dragPath = Path()
 
     var mwidth = 0f
     var mheight = 0f
@@ -40,68 +34,80 @@ class Test2 @JvmOverloads constructor(
     var drawArrow = true
 
     private var arrowPaint = Paint()
+    private var dragPaint = Paint()
 
+    private val dragTopValuePoint = PointF(0f, 0f)
+    private val dragPeakValuePoint = PointF(0f, 0f)
+    private val dragBottomValuePoint = PointF(0f, 0f)
+
+    private val dragTopControlPoint1 = PointF(0f, 0f)
+    private val dragTopControlPoint2 = PointF(0f, 0f)
+    private val dragBottomControlPoint1 = PointF(0f, 0f)
+    private val dragBottomControlPoint2 = PointF(0f, 0f)
+
+    var dragButtonWidth = 0f
+    var dragButtonHeight = 0f
     var fringeOffset = 40f
 
-    private var touchMoveAnimatorX = ValueAnimator.ofFloat(0f, 1f)
-    private var dragAnimator = ValueAnimator.ofFloat(0f, 1f)
+    private val touchMoveAnimator = ValueAnimator.ofFloat(0f, 1f)
+    private val dragReboundAnimator = ValueAnimator.ofFloat(0f, 1f)
 
-    var touchOffset = 0f
+    var dragToLeftOffset = 0f
     var moveFringeOffset = 0f
 
-    var touchLength = 0f
-    var touchFrineg = 0f
+    var touchToLeftOffset = 0f
+    var fringeToLeftLength = 0f
 
-    var currentDrag = 0f
-    var dragX = 0f
+    var reboundLength = 0f
+    var dragReboundX = 0f
 
-    var touchDrag = false
-
-    private var fringeOffsetSpeed = 1f
-        set(value) {
-            field = value
-            invalidate()
-        }
+    var touchDragButton = false
 
 
     init {
-        arrowPaint.setColor(Color.WHITE)
+
+        dragPaint.color = Color.RED
+        dragPaint.isAntiAlias = true
+        dragPaint.style = Paint.Style.FILL_AND_STROKE
+
+        arrowPaint.color = Color.WHITE
         arrowPaint.strokeWidth = 5f
+        arrowPaint.pathEffect = CornerPathEffect(30f)
         arrowPaint.isAntiAlias = true
         arrowPaint.style = Paint.Style.STROKE
         arrowPaint.strokeJoin = Paint.Join.ROUND
         arrowPaint.strokeCap = Paint.Cap.ROUND
 
-        touchMoveAnimatorX.duration = 1200
-        touchMoveAnimatorX.interpolator = BounceInterpolator()
-        touchMoveAnimatorX.doOnStart {
-            touchLength = currentX
-            touchFrineg = mwidth - fringeOffset
+        touchMoveAnimator.duration = 1200
+        touchMoveAnimator.interpolator = BounceInterpolator()
+        touchMoveAnimator.doOnStart {
+            touchToLeftOffset = currentX
+            fringeToLeftLength = mwidth - fringeOffset
         }
-        touchMoveAnimatorX.addUpdateListener {
-            moveFringeOffset = it.animatedValue as Float * touchFrineg
-            touchOffset = it.animatedValue as Float * touchLength
+        touchMoveAnimator.addUpdateListener {
+            moveFringeOffset = it.animatedValue as Float * fringeToLeftLength
+            dragToLeftOffset = it.animatedValue as Float * touchToLeftOffset
             invalidate()
         }
-        touchMoveAnimatorX.doOnEnd {
+        touchMoveAnimator.doOnEnd {
             currentX = mwidth - 140f
             currentY = 1200f
             fringeOffset = 30f
             drawArrow = true
-            touchOffset = 0f
+            dragToLeftOffset = 0f
             moveFringeOffset = 0f
-            touchLength = 0f
-            touchFrineg = 0f
+            touchToLeftOffset = 0f
+            fringeToLeftLength = 0f
         }
 
-        dragAnimator.doOnStart {
-            currentDrag = mwidth - currentX - 140
-            dragX = currentX
+        dragReboundAnimator.doOnStart {
+            reboundLength = mwidth - currentX - 140
+            dragReboundX = currentX
         }
-        dragAnimator.duration = 700
-        dragAnimator.interpolator = OvershootInterpolator(3f)
-        dragAnimator.addUpdateListener {
-            currentX = dragX + it.animatedValue as Float * currentDrag
+        dragReboundAnimator.duration = 700
+        dragReboundAnimator.interpolator = OvershootInterpolator(3f)
+        dragReboundAnimator.addUpdateListener {
+            currentX = dragReboundX + it.animatedValue as Float * reboundLength
             invalidate()
         }
 
@@ -109,53 +115,60 @@ class Test2 @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         canvas.save()
-        var touchWidth = mwidth - 30f - currentX
-        var touchHeight = touchWidth / 0.7f
-        if (touchWidth < 90) {
-            touchHeight /= (touchWidth / 90)
+        dragButtonWidth = mwidth - 30f - currentX
+        dragButtonHeight = dragButtonWidth / 0.7f
+        if (dragButtonWidth < 90) {
+            dragButtonHeight /= (dragButtonWidth / 90)
         }
         fringeOffset = (mwidth - currentX - 30) / 120 * 30f + moveFringeOffset
-        var fitstValuePointf = PointF(mwidth - fringeOffset, currentY - touchHeight)
-        var secondValuePointf = PointF(currentX - touchOffset, currentY)
-        var valuePointF3 = PointF(mwidth - fringeOffset, currentY + touchHeight)
+        dragTopValuePoint.x = mwidth - fringeOffset
+        dragTopValuePoint.y = currentY - dragButtonHeight
+        dragPeakValuePoint.x = currentX - dragToLeftOffset
+        dragPeakValuePoint.y = currentY
+        dragBottomValuePoint.x = mwidth - fringeOffset
+        dragBottomValuePoint.y = currentY + dragButtonHeight
 
-        var topcon1 =
-            PointF(fitstValuePointf.x, (fitstValuePointf.y + secondValuePointf.y) / 2 + 30f)
-        var topcon2 = PointF(
-            secondValuePointf.x + (mwidth - secondValuePointf.x - fringeOffset) * 0.06f,
-            (fitstValuePointf.y + secondValuePointf.y) / 2
-        )
+        dragTopControlPoint1.x = dragTopValuePoint.x
+        dragTopControlPoint1.y = (dragTopValuePoint.y + dragPeakValuePoint.y) / 2 + 30f
 
-        var bottom1 = PointF(
-            secondValuePointf.x + (mwidth - secondValuePointf.x - fringeOffset) * 0.06f,
-            (secondValuePointf.y + valuePointF3.y) / 2
-        )
-        var bottom2 = PointF(
-            valuePointF3.x,
-            secondValuePointf.y + (secondValuePointf.y - fitstValuePointf.y) / 2 - 30f
-        )
+        dragTopControlPoint2.x =
+            dragPeakValuePoint.x + (mwidth - dragPeakValuePoint.x - fringeOffset) * 0.06f
+        dragTopControlPoint2.y = (dragTopValuePoint.y + dragPeakValuePoint.y) / 2
 
-        var path = Path()
-        path.moveTo(mwidth, 0f)
-        path.lineTo(mwidth - fringeOffset, 0f)
-        path.lineTo(mwidth - fringeOffset, currentY - touchHeight)
-        path.lineTo(fitstValuePointf.x, fitstValuePointf.y)
-        path.cubicTo(
-            topcon1.x,
-            topcon1.y,
-            topcon2.x,
-            topcon2.y,
-            secondValuePointf.x,
-            secondValuePointf.y
+        dragBottomControlPoint1.x =
+            dragPeakValuePoint.x + (mwidth - dragPeakValuePoint.x - fringeOffset) * 0.06f
+        dragBottomControlPoint1.y = (dragPeakValuePoint.y + dragBottomValuePoint.y) / 2
+
+
+        dragBottomControlPoint2.x = dragBottomValuePoint.x
+        dragBottomControlPoint2.y =
+            dragPeakValuePoint.y + (dragPeakValuePoint.y - dragTopValuePoint.y) / 2 - 30f
+
+
+        dragPath.moveTo(mwidth, 0f)
+        dragPath.lineTo(mwidth - fringeOffset, 0f)
+        dragPath.lineTo(mwidth - fringeOffset, currentY - dragButtonHeight)
+        dragPath.lineTo(dragTopValuePoint.x, dragTopValuePoint.y)
+        dragPath.cubicTo(
+            dragTopControlPoint1.x,
+            dragTopControlPoint1.y,
+            dragTopControlPoint2.x,
+            dragTopControlPoint2.y,
+            dragPeakValuePoint.x,
+            dragPeakValuePoint.y
         )
-        path.cubicTo(bottom1.x, bottom1.y, bottom2.x, bottom2.y, valuePointF3.x, valuePointF3.y)
-        path.lineTo(mwidth - fringeOffset, mheight)
-        path.lineTo(mwidth, mheight)
-        var paint = Paint()
-        paint.color = Color.RED
-        paint.style = Paint.Style.FILL_AND_STROKE
-        canvas.drawPath(path, paint)
-        path.reset()
+        dragPath.cubicTo(
+            dragBottomControlPoint1.x,
+            dragBottomControlPoint1.y,
+            dragBottomControlPoint2.x,
+            dragBottomControlPoint2.y,
+            dragBottomValuePoint.x,
+            dragBottomValuePoint.y
+        )
+        dragPath.lineTo(mwidth - fringeOffset, mheight)
+        dragPath.lineTo(mwidth, mheight)
+        canvas.drawPath(dragPath, dragPaint)
+        dragPath.reset()
         canvas.restore()
 
         canvas.save()
@@ -166,7 +179,6 @@ class Test2 @JvmOverloads constructor(
                 30f,
                 Path.Direction.CCW
             )
-            arrowPaint.pathEffect = CornerPathEffect(30f)
             arrowPath.moveTo(
                 (currentX + 55f),
                 currentY - 15f
@@ -198,7 +210,7 @@ class Test2 @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
-                if (touchDrag) {
+                if (touchDragButton) {
                     currentX = max(mwidth / 3, event.x)
                     currentY = event.y
                     drawArrow = currentX >= mwidth / 2
@@ -206,16 +218,15 @@ class Test2 @JvmOverloads constructor(
                 }
             }
             MotionEvent.ACTION_DOWN -> {
-                touchDrag = !(currentX - event.x > 30 || abs(event.y - currentY) > 50)
-                Log.i("zzz", "touch:$touchDrag")
+                touchDragButton = !(currentX - event.x > 30 || abs(event.y - currentY) > 50)
             }
             MotionEvent.ACTION_UP -> {
-                if (touchDrag) {
+                if (touchDragButton) {
                     if (currentX < mwidth / 2) {
                         drawArrow = false
-                        touchMoveAnimatorX.start()
+                        touchMoveAnimator.start()
                     } else {
-                        dragAnimator.start()
+                        dragReboundAnimator.start()
                     }
                 }
             }
