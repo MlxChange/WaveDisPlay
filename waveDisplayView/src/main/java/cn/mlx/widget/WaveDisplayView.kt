@@ -177,6 +177,31 @@ class WaveDisplayView @JvmOverloads constructor(
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         if (getChildAt(1) == child) {
 
+            canvas.save()
+            if (drawArrow) {
+                arrowPath.addCircle(
+                    currentX + 50f,
+                    currentY,
+                    30f,
+                    Path.Direction.CCW
+                )
+                arrowPath.moveTo(
+                    (currentX + 55f),
+                    currentY - 15f
+                )
+                arrowPath.lineTo(
+                    (currentX + 35f),
+                    currentY
+                )
+                arrowPath.lineTo(
+                    (currentX + 55f),
+                    currentY + 15f
+                )
+                canvas.drawPath(arrowPath, arrowPaint)
+            }
+            arrowPath.reset()
+            canvas.restore()
+
             dragButtonWidth = mwidth - 30f - currentX
             dragButtonHeight = dragButtonWidth / 0.7f
             if (dragButtonWidth < 90) {
