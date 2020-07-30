@@ -22,13 +22,26 @@ import kotlin.math.max
  * Project:NetEasy
  * Created by mlxCh on 2020/7/28.
  */
-class WaveDisplayView @JvmOverloads constructor(
+class WaveDisplayView <T> @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr) {
 
 
     var currentX = 0f
     var currentY = 0f
+
+    var viewList= mutableListOf<View>()
+    lateinit var mAdapter:WaveAdapter<T>
+    private val mObserver: AdapterDataObserver = object :AdapterDataObserver(){
+
+        override fun onChanged() {
+            refreshView()
+        }
+    }
+
+    private fun refreshView() {
+
+    }
 
     private var arrowPath = Path()
     private var dragPath = Path()
@@ -294,6 +307,11 @@ class WaveDisplayView @JvmOverloads constructor(
         currentY = 1200f
     }
 
+    fun setAdapter(adapter:WaveAdapter<T>){
+        mAdapter=adapter
+        mAdapter.registerObserver(this)
+    }
+
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         for (i in 0 until childCount) {
             getChildAt(i).layout(l, t, getChildAt(i).measuredWidth, getChildAt(i).measuredHeight)
@@ -304,7 +322,7 @@ class WaveDisplayView @JvmOverloads constructor(
         return MarginLayoutParams(context, attrs)
     }
 
-    abstract class WaveAdapter <VH:ViewHolder >{
+    abstract class Adapter <VH:ViewHolder >{
 
         private val mObservable: AdapterDataObservable = AdapterDataObservable()
 
@@ -313,6 +331,7 @@ class WaveDisplayView @JvmOverloads constructor(
         abstract fun bindViewHolder(holder:ViewHolder,position:Int)
 
         abstract fun getItemCount():Int
+
 
         fun notifyDataSetChanged(){
             mObservable.notifyChanged()
@@ -344,7 +363,8 @@ class WaveDisplayView @JvmOverloads constructor(
     }
 
     abstract class AdapterDataObserver {
-        fun onChanged() {}
+        open fun onChanged() {}
     }
+
 
 }
