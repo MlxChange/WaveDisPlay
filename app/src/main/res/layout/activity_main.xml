@@ -7,26 +7,11 @@
     tools:context=".MainActivity">
 
     <cn.mlx.widget.WaveDisplayView
+        android:id="@+id/wave"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-
-        <TextView
-            android:background="#D1B6E1"
-            android:textSize="20sp"
-            android:textColor="#fff"
-            android:text="爱司琪爱生命爱司琪爱生命爱司琪爱生命爱司琪爱生命爱司琪爱生命"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <TextView
-            android:background="#58C9B9"
-            android:textSize="20sp"
-            android:textColor="#fff"
-            android:text="马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔马凌翔"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
+        android:layout_height="wrap_content">
 
     </cn.mlx.widget.WaveDisplayView>
 

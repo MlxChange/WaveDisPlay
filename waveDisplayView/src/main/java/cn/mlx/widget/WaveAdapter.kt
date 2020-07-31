@@ -11,24 +11,26 @@ import cn.mlx.widget.WaveDisplayView.ViewHolder
  * Project:WaveDisPlay
  * Created by MLX on 2020/7/30.
  */
-abstract class WaveAdapter <T>(val context: Context, mlist:List<T>): WaveDisplayView.Adapter<ViewHolder>() {
+abstract class WaveAdapter<T>(val context: Context, mList: List<T>) :
+    WaveDisplayView.Adapter<ViewHolder>() {
 
-    private var mInflater:LayoutInflater = LayoutInflater.from(context)
-    private var mdata= mutableListOf<T>()
+    protected var mInflater: LayoutInflater = LayoutInflater.from(context)
+    private var mData = mutableListOf<T>()
+
     init {
-        mdata.clear()
-        mdata.addAll(mlist)
+        mData.clear()
+        mData.addAll(mList)
     }
 
-    fun updateData(mlist:List<T>){
-        mdata.clear()
-        mdata.addAll(mlist)
+    fun updateData(mlist: List<T>) {
+        mData.clear()
+        mData.addAll(mlist)
         notifyDataSetChanged()
     }
 
 
-    override fun getItemCount(): Int = mdata.size
+    override fun getItemCount(): Int = mData.size
 
-    fun getItem(position: Int): T = mdata[position]
+    fun getItem(position: Int): T = mData[position]
 
 }
