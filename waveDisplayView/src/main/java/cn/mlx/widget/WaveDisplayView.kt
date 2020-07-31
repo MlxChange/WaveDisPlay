@@ -134,25 +134,25 @@ class WaveDisplayView<T> @JvmOverloads constructor(
             }
         }
         touchMoveAnimator.doOnEnd {
-            Log.i(TAG, "current 2 :$currentIndex ")
             if (clipOrientation == CLIP_RIGHT) {
-                if (currentIndex < recyclePool.size - 1) {
+                if (currentIndex < recyclePool.size - 2) {
                     currentIndex += 1
-                    var lastIndex = currentIndex + 1
-                    addView(recyclePool[lastIndex].itemView, 0)
+                    val lastIndex = currentIndex + 1
                     removeViewAt(childCount - 1)
+                    addView(recyclePool[lastIndex].itemView, 0)
                 } else {
                     clipOrientation = CLIP_LEFT
-                    addView(recyclePool[currentIndex--].itemView, 0)
+                    var perIndex = currentIndex - 1
+                    addView(recyclePool[perIndex].itemView, 0)
                 }
             } else {
                 if (currentIndex > 0) {
-                    currentIndex--
-                    addView(recyclePool[currentIndex--].itemView, 0)
+                    var perIndex = currentIndex - 1
+                    addView(recyclePool[perIndex].itemView, 0)
                     removeViewAt(childCount - 1)
                 } else {
                     clipOrientation = CLIP_RIGHT
-                    addView(recyclePool[currentIndex++].itemView, 0)
+                    addView(recyclePool[currentIndex + 1].itemView, 0)
                 }
             }
             this.postDelayed({ dragGenerateAnimator.start() }, 300)
