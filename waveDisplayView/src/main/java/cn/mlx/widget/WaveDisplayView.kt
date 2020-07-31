@@ -96,6 +96,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
     var canTouchDrag = true
 
     var currentIndex = -1
+    var changeOrientation=false
 
     init {
 
@@ -134,28 +135,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
             }
         }
         touchMoveAnimator.doOnEnd {
-            if (clipOrientation == CLIP_RIGHT) {
-                if (currentIndex < recyclePool.size - 2) {
-                    currentIndex += 1
-                    val lastIndex = currentIndex + 1
-                    removeViewAt(childCount - 1)
-                    addView(recyclePool[lastIndex].itemView, 0)
-                } else {
-                    clipOrientation = CLIP_LEFT
-                    var perIndex = currentIndex - 1
-                    addView(recyclePool[perIndex].itemView, 0)
-                }
-            } else {
-                if (currentIndex > 0) {
-                    var perIndex = currentIndex - 1
-                    addView(recyclePool[perIndex].itemView, 0)
-                    removeViewAt(childCount - 1)
-                } else {
-                    clipOrientation = CLIP_RIGHT
-                    addView(recyclePool[currentIndex + 1].itemView, 0)
-                }
-            }
-            this.postDelayed({ dragGenerateAnimator.start() }, 300)
+            dragGenerateAnimator.start()
         }
 
 
@@ -167,6 +147,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
                 reboundLength = currentX - 140
                 dragReboundX = currentX
             }
+
         }
         dragReboundAnimator.duration = 700
         dragReboundAnimator.interpolator = OvershootInterpolator(3f)
@@ -183,10 +164,29 @@ class WaveDisplayView<T> @JvmOverloads constructor(
 
         dragGenerateAnimator.duration = 1000
         dragGenerateAnimator.doOnStart {
+            if(!changeOrientation){
+                addNextOrPreView()
+            }
             canTouchDrag = false
             currentX = if (clipOrientation == CLIP_RIGHT) {
+                if(changeOrientation){
+                    var holder=recyclePool[currentIndex+1]
+                    if(holder!=null){
+                        removeViewAt(childCount-2)
+                        addView(holder.itemView,0)
+                    }
+                    changeOrientation=false
+                }
                 mwidth
             } else {
+                if(changeOrientation){
+                    var holder=recyclePool[currentIndex-1]
+                    if(holder!=null){
+                        removeViewAt(childCount-2)
+                        addView(holder.itemView,0)
+                    }
+                    changeOrientation=false
+                }
                 0f
             }
             drawArrow = true
@@ -211,6 +211,37 @@ class WaveDisplayView<T> @JvmOverloads constructor(
         }
 
 
+    }
+
+    private fun addNextOrPreView() {
+
+        if (clipOrientation == CLIP_RIGHT) {
+            if (currentIndex < recyclePool.size - 2) {
+                currentIndex += 1
+                val lastIndex = currentIndex + 1
+                removeViewAt(childCount - 1)
+                addView(recyclePool[lastIndex].itemView, 0)
+            } else {
+                clipOrientation = CLIP_LEFT
+                var view = getChildAt(childCount-1)
+                removeViewAt(childCount-1)
+                currentIndex += 1
+                addView(view, 0)
+            }
+        } else {
+            if (currentIndex > 1) {
+                currentIndex -= 1
+                var perIndex = currentIndex - 1
+                addView(recyclePool[perIndex].itemView, 0)
+                removeViewAt(childCount - 1)
+            } else {
+                clipOrientation = CLIP_RIGHT
+                var view = getChildAt(childCount-1)
+                removeViewAt(childCount-1)
+                currentIndex -= 1
+                addView(view, 0)
+            }
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -248,10 +279,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
 
                     touchDragButton =
                         !(!(event.x < 140 && event.x > 50) || abs(event.y - currentY) > 50 || !canTouchDrag)
-                    Log.i(
-                        TAG,
-                        "onInterceptTouchEvent: current:$currentX,eventx:${event.x},touch:${touchDragButton}"
-                    )
+
                     return touchDragButton
                 }
             }
@@ -304,8 +332,9 @@ class WaveDisplayView<T> @JvmOverloads constructor(
                         touchMoveAnimator.start()
                     } else {
                         if (currentX >= mwidth - 15) {
-                            if (childCount > 1 && currentIndex > 0) {
+                            if (currentIndex > 0) {
                                 clipOrientation = CLIP_LEFT
+                                changeOrientation=true
                             }
                             dragGenerateAnimator.start()
                         } else {
@@ -351,9 +380,11 @@ class WaveDisplayView<T> @JvmOverloads constructor(
                         touchMoveAnimator.start()
                     } else {
                         if (currentX <= 15) {
-                            if (childCount > 1 && currentIndex < recyclePool.size - 1) {
+                            if (currentIndex<recyclePool.size-1) {
                                 clipOrientation = CLIP_RIGHT
+                                changeOrientation=true
                             }
+                            Log.i(TAG, "onTouchWhenClipLeft: currentIndex:$currentIndex,size:${recyclePool.size}")
                             dragGenerateAnimator.start()
                         } else {
                             dragReboundAnimator.start()
@@ -380,9 +411,6 @@ class WaveDisplayView<T> @JvmOverloads constructor(
             if (child == getChildAt(childCount - 2)) {
                 return super.drawChild(canvas, child, drawingTime)
             }
-        } else if (childCount == 1) {
-            //clipLeftCanvas(canvas)
-            return super.drawChild(canvas, child, drawingTime)
         }
         return false
     }

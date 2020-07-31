@@ -15,7 +15,7 @@ class MyAdapter(context: Context, mList: MutableList<String>) :
     WaveAdapter<String>(context, mList) {
 
 
-    private var colors = intArrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.MAGENTA)
+    private var colors = intArrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.RED,Color.BLUE)
 
     override fun createViewHolder(parent: ViewGroup, type: Int): WaveDisplayView.ViewHolder {
         var view = mInflater.inflate(R.layout.item, parent, false)

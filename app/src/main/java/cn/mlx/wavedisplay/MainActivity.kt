@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         waveDisplayView = findViewById(R.id.wave)
         var datas = mutableListOf<String>()
-        for (i in 0..2) {
+        for (i in 0..5) {
             datas.add("${i}")
         }
         val waveAdapter = MyAdapter(this, datas)
