@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.BounceInterpolator
+import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -17,6 +18,7 @@ import androidx.core.view.children
 import java.lang.IllegalArgumentException
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 
 /**
@@ -27,6 +29,13 @@ class WaveDisplayView<T> @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr) {
 
+
+    val TAG = "WaveDisplayView"
+
+    val CLIP_RIGHT = 0
+    val CLIP_LEFT = 1
+
+    var clipOrientation = CLIP_RIGHT
 
     var currentX = 0f
     var currentY = 0f
@@ -71,16 +80,22 @@ class WaveDisplayView<T> @JvmOverloads constructor(
     private val dragGenerateAnimator = ValueAnimator.ofFloat(0f, 1f)
 
     var dragToLeftOffset = 0f
+    var dragToRightOffset = 0f
     var moveFringeOffset = 0f
 
     var touchToLeftOffset = 0f
     var fringeToLeftLength = 0f
+
+    var touchToRightOffset = 0f
+    var fringeToRightLength = 0f
 
     var reboundLength = 0f
     var dragReboundX = 0f
 
     var touchDragButton = false
     var canTouchDrag = true
+
+    var currentIndex = -1
 
     init {
 
@@ -99,36 +114,68 @@ class WaveDisplayView<T> @JvmOverloads constructor(
         touchMoveAnimator.duration = 1200
         touchMoveAnimator.interpolator = BounceInterpolator()
         touchMoveAnimator.doOnStart {
-            touchToLeftOffset = currentX
-            fringeToLeftLength = mwidth - fringeOffset
+            if (clipOrientation == CLIP_RIGHT) {
+                touchToLeftOffset = currentX
+                fringeToLeftLength = mwidth - fringeOffset
+            } else {
+                touchToRightOffset = mwidth - currentX + 30
+                fringeToRightLength = mwidth - fringeOffset
+            }
         }
         touchMoveAnimator.addUpdateListener {
-            moveFringeOffset = it.animatedValue as Float * fringeToLeftLength
-            dragToLeftOffset = it.animatedValue as Float * touchToLeftOffset
-            invalidate()
+            if (clipOrientation == CLIP_RIGHT) {
+                moveFringeOffset = it.animatedValue as Float * fringeToLeftLength
+                dragToLeftOffset = it.animatedValue as Float * touchToLeftOffset
+                invalidate()
+            } else {
+                moveFringeOffset = it.animatedValue as Float * fringeToRightLength
+                dragToRightOffset = it.animatedValue as Float * touchToRightOffset
+                invalidate()
+            }
         }
         touchMoveAnimator.doOnEnd {
-            fringeOffset = 30f
-            currentX = mwidth
-            drawArrow = true
-            dragToLeftOffset = 0f
-            moveFringeOffset = 0f
-            touchToLeftOffset = 0f
-            fringeToLeftLength = 0f
-
-            removeViewAt(childCount - 1)
+            Log.i(TAG, "current 2 :$currentIndex ")
+            if (clipOrientation == CLIP_RIGHT) {
+                if (currentIndex < recyclePool.size - 1) {
+                    currentIndex += 1
+                    var lastIndex = currentIndex + 1
+                    addView(recyclePool[lastIndex].itemView, 0)
+                    removeViewAt(childCount - 1)
+                } else {
+                    clipOrientation = CLIP_LEFT
+                    addView(recyclePool[currentIndex--].itemView, 0)
+                }
+            } else {
+                if (currentIndex > 0) {
+                    currentIndex--
+                    addView(recyclePool[currentIndex--].itemView, 0)
+                    removeViewAt(childCount - 1)
+                } else {
+                    clipOrientation = CLIP_RIGHT
+                    addView(recyclePool[currentIndex++].itemView, 0)
+                }
+            }
             this.postDelayed({ dragGenerateAnimator.start() }, 300)
         }
 
 
         dragReboundAnimator.doOnStart {
-            reboundLength = mwidth - currentX - 140
-            dragReboundX = currentX
+            if (clipOrientation == CLIP_RIGHT) {
+                reboundLength = mwidth - currentX - 140
+                dragReboundX = currentX
+            } else {
+                reboundLength = currentX - 140
+                dragReboundX = currentX
+            }
         }
         dragReboundAnimator.duration = 700
         dragReboundAnimator.interpolator = OvershootInterpolator(3f)
         dragReboundAnimator.addUpdateListener {
-            currentX = dragReboundX + it.animatedValue as Float * reboundLength
+            currentX = if (clipOrientation == CLIP_RIGHT) {
+                dragReboundX + it.animatedValue as Float * reboundLength
+            } else {
+                dragReboundX - it.animatedValue as Float * reboundLength
+            }
             invalidate()
         }
 
@@ -137,15 +184,33 @@ class WaveDisplayView<T> @JvmOverloads constructor(
         dragGenerateAnimator.duration = 1000
         dragGenerateAnimator.doOnStart {
             canTouchDrag = false
+            currentX = if (clipOrientation == CLIP_RIGHT) {
+                mwidth
+            } else {
+                0f
+            }
+            drawArrow = true
+            dragToLeftOffset = 0f
+            dragToRightOffset = 0f
+            touchToRightOffset = 0f
+            moveFringeOffset = 0f
+            touchToLeftOffset = 0f
+            fringeToLeftLength = 0f
         }
         dragGenerateAnimator.interpolator = OvershootInterpolator()
         dragGenerateAnimator.addUpdateListener {
-            currentX = mwidth - 140f * it.animatedValue as Float
+            currentX = if (clipOrientation == CLIP_RIGHT) {
+                mwidth - 140f * it.animatedValue as Float
+            } else {
+                120f * it.animatedValue as Float
+            }
             invalidate()
         }
         dragGenerateAnimator.doOnEnd {
             canTouchDrag = true
         }
+
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -170,18 +235,45 @@ class WaveDisplayView<T> @JvmOverloads constructor(
 
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_DOWN) {
-            touchDragButton =
-                !(currentX - event.x > 30 || abs(event.y - currentY) > 50 || !canTouchDrag)
-            return touchDragButton
+        when (clipOrientation) {
+            CLIP_RIGHT -> {
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    touchDragButton =
+                        !(currentX - event.x > 30 || abs(event.y - currentY) > 50 || !canTouchDrag)
+                    return touchDragButton
+                }
+            }
+            CLIP_LEFT -> {
+                if (event.action == MotionEvent.ACTION_DOWN) {
+
+                    touchDragButton =
+                        !(!(event.x < 140 && event.x > 50) || abs(event.y - currentY) > 50 || !canTouchDrag)
+                    Log.i(
+                        TAG,
+                        "onInterceptTouchEvent: current:$currentX,eventx:${event.x},touch:${touchDragButton}"
+                    )
+                    return touchDragButton
+                }
+            }
         }
         return false
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (clipOrientation) {
+            CLIP_RIGHT -> {
+                if (onTouchWhenClipRight(event)) return touchDragButton
+            }
+            CLIP_LEFT -> {
+                if (onTouchWhenClipLeft(event)) return touchDragButton
+            }
+        }
+        return false
+    }
+
+    private fun onTouchWhenClipRight(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
-
                 if (touchDragButton) {
                     currentX = max(mwidth / 3, event.x)
 
@@ -202,8 +294,8 @@ class WaveDisplayView<T> @JvmOverloads constructor(
             }
             MotionEvent.ACTION_DOWN -> {
                 touchDragButton =
-                    !(currentX - event.x > 30 || abs(event.y - currentY) > 50 || !canTouchDrag)
-                return touchDragButton
+                    !(currentX - event.x > 90 || abs(event.y - currentY) > 50 || !canTouchDrag)
+                return true
             }
             MotionEvent.ACTION_UP -> {
                 if (touchDragButton) {
@@ -211,7 +303,62 @@ class WaveDisplayView<T> @JvmOverloads constructor(
                         drawArrow = false
                         touchMoveAnimator.start()
                     } else {
-                        dragReboundAnimator.start()
+                        if (currentX >= mwidth - 15) {
+                            if (childCount > 1 && currentIndex > 0) {
+                                clipOrientation = CLIP_LEFT
+                            }
+                            dragGenerateAnimator.start()
+                        } else {
+                            dragReboundAnimator.start()
+                        }
+
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+    private fun onTouchWhenClipLeft(event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_MOVE -> {
+                if (touchDragButton) {
+                    currentX = min(mwidth / 3 * 2, event.x)
+                    currentY = when {
+                        event.y > mheight - 80 -> {
+                            mheight - 80
+                        }
+                        event.y < 80 -> {
+                            80f
+                        }
+                        else -> {
+                            event.y
+                        }
+                    }
+                    drawArrow = currentX <= mwidth / 2
+                    invalidate()
+                }
+            }
+            MotionEvent.ACTION_DOWN -> {
+                touchDragButton =
+                    !(currentX - event.x > 90 || abs(event.y - currentY) > 50 || !canTouchDrag)
+                return touchDragButton
+            }
+            MotionEvent.ACTION_UP -> {
+                if (touchDragButton) {
+                    if (currentX > mwidth / 2) {
+                        drawArrow = false
+                        touchMoveAnimator.start()
+                    } else {
+                        if (currentX <= 15) {
+                            if (childCount > 1 && currentIndex < recyclePool.size - 1) {
+                                clipOrientation = CLIP_RIGHT
+                            }
+                            dragGenerateAnimator.start()
+                        } else {
+                            dragReboundAnimator.start()
+                        }
+
                     }
                 }
             }
@@ -223,19 +370,109 @@ class WaveDisplayView<T> @JvmOverloads constructor(
     override fun drawChild(canvas: Canvas, child: View, drawingTime: Long): Boolean {
         if (childCount > 1) {
             if (child == getChildAt(childCount - 1)) {
-                clipCanvas(canvas)
+                if (clipOrientation == CLIP_RIGHT) {
+                    clipRightCanvas(canvas)
+                } else {
+                    clipLeftCanvas(canvas)
+                }
                 return super.drawChild(canvas, child, drawingTime)
             }
             if (child == getChildAt(childCount - 2)) {
                 return super.drawChild(canvas, child, drawingTime)
             }
         } else if (childCount == 1) {
+            //clipLeftCanvas(canvas)
             return super.drawChild(canvas, child, drawingTime)
         }
         return false
     }
 
-    private fun clipCanvas(canvas: Canvas) {
+    private fun clipLeftCanvas(canvas: Canvas) {
+        canvas.save()
+        if (drawArrow) {
+            arrowPath.addCircle(
+                currentX - 50f,
+                currentY,
+                30f,
+                Path.Direction.CCW
+            )
+            arrowPath.moveTo(
+                (currentX - 55f),
+                currentY - 15f
+            )
+            arrowPath.lineTo(
+                (currentX - 35f),
+                currentY
+            )
+            arrowPath.lineTo(
+                (currentX - 55f),
+                currentY + 15f
+            )
+            canvas.drawPath(arrowPath, arrowPaint)
+        }
+        arrowPath.reset()
+        canvas.restore()
+
+        dragButtonWidth = currentX - 30f
+        dragButtonHeight = dragButtonWidth / 0.7f
+        if (dragButtonWidth < 90) {
+            dragButtonHeight /= (dragButtonWidth / 90)
+        }
+        fringeOffset = (currentX + 30) / 120 * 30f + moveFringeOffset
+        dragTopValuePoint.x = fringeOffset
+        dragTopValuePoint.y = currentY - dragButtonHeight
+
+        dragPeakValuePoint.x = currentX + dragToRightOffset
+        dragPeakValuePoint.y = currentY
+
+
+        dragBottomValuePoint.x = fringeOffset
+        dragBottomValuePoint.y = currentY + dragButtonHeight
+
+        dragTopControlPoint1.x = dragTopValuePoint.x
+        dragTopControlPoint1.y = (dragTopValuePoint.y + dragPeakValuePoint.y) / 2 + 30f
+
+        dragTopControlPoint2.x =
+            dragPeakValuePoint.x * 0.94f
+        dragTopControlPoint2.y = (dragTopValuePoint.y + dragPeakValuePoint.y) / 2
+
+        dragBottomControlPoint1.x =
+            dragPeakValuePoint.x * 0.94f
+        dragBottomControlPoint1.y = (dragPeakValuePoint.y + dragBottomValuePoint.y) / 2
+
+
+        dragBottomControlPoint2.x = dragBottomValuePoint.x
+        dragBottomControlPoint2.y =
+            dragPeakValuePoint.y + (dragPeakValuePoint.y - dragTopValuePoint.y) / 2 - 30f
+
+
+        dragPath.moveTo(0f, 0f)
+        dragPath.lineTo(fringeOffset, 0f)
+        dragPath.lineTo(fringeOffset, currentY - dragButtonHeight)
+        dragPath.lineTo(dragTopValuePoint.x, dragTopValuePoint.y)
+        dragPath.cubicTo(
+            dragTopControlPoint1.x,
+            dragTopControlPoint1.y,
+            dragTopControlPoint2.x,
+            dragTopControlPoint2.y,
+            dragPeakValuePoint.x,
+            dragPeakValuePoint.y
+        )
+        dragPath.cubicTo(
+            dragBottomControlPoint1.x,
+            dragBottomControlPoint1.y,
+            dragBottomControlPoint2.x,
+            dragBottomControlPoint2.y,
+            dragBottomValuePoint.x,
+            dragBottomValuePoint.y
+        )
+        dragPath.lineTo(fringeOffset, mheight)
+        dragPath.lineTo(0f, mheight)
+        canvas.clipPath(dragPath, Region.Op.DIFFERENCE)
+        dragPath.reset()
+    }
+
+    private fun clipRightCanvas(canvas: Canvas) {
         canvas.save()
         if (drawArrow) {
             arrowPath.addCircle(
@@ -321,7 +558,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
         super.onSizeChanged(w, h, oldw, oldh)
         mwidth = w.toFloat()
         mheight = h.toFloat()
-        currentX = mwidth - 140f
+        currentX = if (clipOrientation == CLIP_RIGHT) mwidth - 140f else 140f
         currentY = mheight / 2
     }
 
@@ -333,9 +570,14 @@ class WaveDisplayView<T> @JvmOverloads constructor(
             for (i in 0 until adapter.getItemCount()) {
                 val viewHolder: ViewHolder? = createViewHolder(i)
                     ?: throw IllegalArgumentException("createViewHolder must not be null")
-                addView(viewHolder!!.itemView, 0)
-                requestLayout()
             }
+            for (i in 0 until recyclePool.size) {
+                if (i > 1) break
+                addView(recyclePool[i].itemView, 0)
+            }
+            currentIndex = 0
+            Log.i(TAG, "refreshView: $currentIndex")
+            requestLayout()
         }
 
     }
