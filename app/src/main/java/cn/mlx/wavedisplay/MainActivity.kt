@@ -2,25 +2,23 @@ package cn.mlx.wavedisplay
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.lifecycle.Observer
-import cn.mlx.widget.WaveAdapter
+import android.view.WindowManager
 import cn.mlx.widget.WaveDisplayView
-import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var waveDisplayView: WaveDisplayView<String>
+    lateinit var waveDisplayView: WaveDisplayView<Int>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         setContentView(R.layout.activity_main)
         waveDisplayView = findViewById(R.id.wave)
-        var datas = mutableListOf<String>()
-        for (i in 0..5) {
-            datas.add("${i}")
+        val mData = mutableListOf<Int>()
+        for (i in 0..6) {
+            mData.add(i)
         }
-        val waveAdapter = MyAdapter(this, datas)
+        val waveAdapter = MyAdapter(this, mData)
         waveDisplayView.setAdapter(waveAdapter)
 
     }
