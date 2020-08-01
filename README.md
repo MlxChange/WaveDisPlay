@@ -1,10 +1,18 @@
 # WaveDisPlayView
-
-WaveDisPlayView is an Android list view that allows you to preview the next view or the previous view by dragging left and right.
 ![](https://img.shields.io/badge/Platform-Android-brightgreen.svg)
 ![](https://img.shields.io/github/v/release/mlxchange/WaveDisPlay)
 ![](https://img.shields.io/badge/mlxchange-WaveDisPlay-brightgreen)
 ![](https://img.shields.io/badge/jitpack-2.0-blue)
+
+WaveDisPlayView is an Android list view that allows you to preview the next view or the previous view by dragging left and right.
+
+
+## Screenshot
+
+![](/screenshot/screenshot1.gif) ![](/screenshot/screenshot2.gif) ![](/screenshot/screenshot3.gif)
+
+
+
 ## Installation
 
 Add it to your root build.gradle with:
