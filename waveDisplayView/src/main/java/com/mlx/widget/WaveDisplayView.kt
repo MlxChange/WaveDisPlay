@@ -1,12 +1,12 @@
 package com.mlx.widget
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.database.Observable
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -33,21 +33,21 @@ class WaveDisplayView @JvmOverloads constructor(
 
     val TAG = "WaveDisplayView"
 
-    val CLIP_RIGHT = 0
-    val CLIP_LEFT = 1
+    private val CLIP_RIGHT = 0
+    private val CLIP_LEFT = 1
 
     val MAX_SINGLE_CLICK_TIME=50
     val MAX_MOVE_FOR_CLICK=50
     val MAX_LONG_PRESS_TIME=350
 
-    var clipOrientation = CLIP_RIGHT
+    private var clipOrientation = CLIP_RIGHT
 
-    var currentX = 0f
-    var currentY = 0f
+    private var currentX = 0f
+    private var currentY = 0f
 
-    var arrowRadius=30f
+    private var arrowRadius=30f
 
-    var recyclePool = mutableListOf<ViewHolder>()
+    private var recyclePool = mutableListOf<ViewHolder>()
     private var mAdapter: Adapter<ViewHolder>? = null
 
     private val mObserver: AdapterDataObserver = object : AdapterDataObserver() {
@@ -60,10 +60,10 @@ class WaveDisplayView @JvmOverloads constructor(
     private var arrowPath = Path()
     private var dragPath = Path()
 
-    var mwidth = 0f
-    var mheight = 0f
+    private var mwidth = 0f
+    private var mheight = 0f
 
-    var drawArrow = true
+    private var drawArrow = true
 
     private var arrowPaint = Paint()
 
@@ -76,34 +76,34 @@ class WaveDisplayView @JvmOverloads constructor(
     private val dragBottomControlPoint1 = PointF(0f, 0f)
     private val dragBottomControlPoint2 = PointF(0f, 0f)
 
-    var dragButtonWidth = 0f
-    var dragButtonHeight = 0f
-    var fringeOffset = 15f.dp
+    private var dragButtonWidth = 0f
+    private var dragButtonHeight = 0f
+    private var fringeOffset = 15f.dp
 
-    var dragWidth=51.5f.dp
+    private var dragWidth=51.5f.dp
 
     private val touchMoveAnimator = ValueAnimator.ofFloat(0f, 1f)
     private val dragReboundAnimator = ValueAnimator.ofFloat(0f, 1f)
     private val dragGenerateAnimator = ValueAnimator.ofFloat(0f, 1f)
 
-    var dragToLeftOffset = 0f
-    var dragToRightOffset = 0f
-    var moveFringeOffset = 0f
+    private var dragToLeftOffset = 0f
+    private var dragToRightOffset = 0f
+    private var moveFringeOffset = 0f
 
-    var touchToLeftOffset = 0f
-    var fringeToLeftLength = 0f
+    private var touchToLeftOffset = 0f
+    private var fringeToLeftLength = 0f
 
-    var touchToRightOffset = 0f
-    var fringeToRightLength = 0f
+    private var touchToRightOffset = 0f
+    private var fringeToRightLength = 0f
 
-    var reboundLength = 0f
-    var dragReboundX = 0f
+    private var reboundLength = 0f
+    private var dragReboundX = 0f
 
-    var touchDragButton = false
-    var canTouchDrag = true
+    private var touchDragButton = false
+    private var canTouchDrag = true
 
-    var currentIndex = -1
-    var changeOrientation=false
+    private var currentIndex = -1
+    private var changeOrientation=false
     private var turnPage = false
     private var dragLocation=0f
 
@@ -117,7 +117,7 @@ class WaveDisplayView @JvmOverloads constructor(
         val arrowColor=a.getColor(R.styleable.WaveDisplayView_dragColor,Color.parseColor("#ffffff"))
         dragWidth = a.getDimension(R.styleable.WaveDisplayView_dragWidth,51.5f.dp)
         dragLocation = a.getDimension(R.styleable.WaveDisplayView_dragLocation, 0f)
-
+        a.recycle()
         arrowPaint.color = arrowColor
         arrowPaint.strokeWidth = 5f
         arrowPaint.pathEffect = CornerPathEffect(11.5f.dp)
@@ -186,7 +186,7 @@ class WaveDisplayView @JvmOverloads constructor(
             canTouchDrag = false
             currentX = if (clipOrientation == CLIP_RIGHT) {
                 if(changeOrientation){
-                    var holder=recyclePool[currentIndex+1]
+                    val holder=recyclePool[currentIndex+1]
                     if(holder!=null){
                         removeViewAt(childCount-2)
                         addView(holder.itemView,0)
@@ -196,7 +196,7 @@ class WaveDisplayView @JvmOverloads constructor(
                 mwidth
             } else {
                 if(changeOrientation){
-                    var holder=recyclePool[currentIndex-1]
+                    val holder=recyclePool[currentIndex-1]
                     if(holder!=null){
                         removeViewAt(childCount-2)
                         addView(holder.itemView,0)
@@ -229,7 +229,7 @@ class WaveDisplayView @JvmOverloads constructor(
 
     }
 
-    val Float.dp
+    private val Float.dp
         get() = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             this,
@@ -248,7 +248,7 @@ class WaveDisplayView @JvmOverloads constructor(
                 addView(recyclePool[lastIndex].itemView, 0)
             } else {
                 clipOrientation = CLIP_LEFT
-                var view = getChildAt(childCount-1)
+                val view = getChildAt(childCount-1)
                 removeViewAt(childCount-1)
                 currentIndex += 1
                 addView(view, 0)
@@ -256,12 +256,12 @@ class WaveDisplayView @JvmOverloads constructor(
         } else {
             if (currentIndex > 1) {
                 currentIndex -= 1
-                var perIndex = currentIndex - 1
+                val perIndex = currentIndex - 1
                 addView(recyclePool[perIndex].itemView, 0)
                 removeViewAt(childCount - 1)
             } else {
                 clipOrientation = CLIP_RIGHT
-                var view = getChildAt(childCount-1)
+                val view = getChildAt(childCount-1)
                 removeViewAt(childCount-1)
                 currentIndex -= 1
                 addView(view, 0)
@@ -275,7 +275,7 @@ class WaveDisplayView @JvmOverloads constructor(
         val widthUsed = 0
         val heightUsed = 0
 
-        children.forEachIndexed { index, child ->
+        children.forEach { child ->
             measureChildWithMargins(
                 child,
                 widthMeasureSpec,
@@ -311,6 +311,7 @@ class WaveDisplayView @JvmOverloads constructor(
         return false
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (clipOrientation) {
             CLIP_RIGHT -> {
