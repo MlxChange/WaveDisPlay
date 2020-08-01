@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="WaveDisplayView">
+        <attr name="dragColor" format="color"/>
+        <attr name="dragWidth" format="dimension"/>
+        <attr name="dragLocation" format="dimension"/>
+    </declare-styleable>
+
+</resources>
