@@ -1,4 +1,4 @@
-package cn.mlx.widget
+package com.mlx.widget
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -16,6 +16,7 @@ import android.view.animation.OvershootInterpolator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.children
+import cn.mlx.widget.R
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -25,7 +26,7 @@ import kotlin.math.min
  * Project:NetEasy
  * Created by mlxCh on 2020/7/28.
  */
-class WaveDisplayView<T> @JvmOverloads constructor(
+class WaveDisplayView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr) {
 
@@ -47,7 +48,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
     var arrowRadius=30f
 
     var recyclePool = mutableListOf<ViewHolder>()
-    private var mAdapter: WaveAdapter<T>? = null
+    private var mAdapter: Adapter<ViewHolder>? = null
 
     private val mObserver: AdapterDataObserver = object : AdapterDataObserver() {
         override fun onChanged() {
@@ -110,7 +111,8 @@ class WaveDisplayView<T> @JvmOverloads constructor(
 
 
 
-        val a = getContext().obtainStyledAttributes(attrs, R.styleable.WaveDisplayView,
+        val a = getContext().obtainStyledAttributes(attrs,
+            R.styleable.WaveDisplayView,
             defStyleAttr, 0)
         val arrowColor=a.getColor(R.styleable.WaveDisplayView_dragColor,Color.parseColor("#ffffff"))
         dragWidth = a.getDimension(R.styleable.WaveDisplayView_dragWidth,51.5f.dp)
@@ -657,7 +659,7 @@ class WaveDisplayView<T> @JvmOverloads constructor(
         return viewHolder
     }
 
-    fun setAdapter(adapter: WaveAdapter<T>) {
+    fun setAdapter(adapter: Adapter<ViewHolder>) {
         mAdapter = adapter
         mAdapter?.registerObserver(mObserver)
         mAdapter?.notifyDataSetChanged()
@@ -673,13 +675,14 @@ class WaveDisplayView<T> @JvmOverloads constructor(
         return MarginLayoutParams(context, attrs)
     }
 
-    abstract class Adapter<VH : ViewHolder> {
+    abstract class Adapter<VH :  ViewHolder> {
 
-        private val mObservable: AdapterDataObservable = AdapterDataObservable()
+        private val mObservable: AdapterDataObservable =
+            AdapterDataObservable()
 
-        abstract fun createViewHolder(parent: ViewGroup, type: Int): ViewHolder
+        abstract fun createViewHolder(parent: ViewGroup, type: Int): VH
 
-        abstract fun bindViewHolder(holder: ViewHolder, position: Int)
+        abstract fun bindViewHolder(holder: VH, position: Int)
 
         abstract fun getItemCount(): Int
 

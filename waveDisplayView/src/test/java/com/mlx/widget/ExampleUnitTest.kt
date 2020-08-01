@@ -1,4 +1,4 @@
-package cn.mlx.widget
+package com.mlx.widget
 
 import org.junit.Test
 

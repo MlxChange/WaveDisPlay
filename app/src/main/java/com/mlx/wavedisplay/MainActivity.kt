@@ -1,13 +1,14 @@
-package cn.mlx.wavedisplay
+package com.mlx.wavedisplay
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.WindowManager
-import cn.mlx.widget.WaveDisplayView
+import cn.mlx.wavedisplay.R
+import com.mlx.widget.WaveDisplayView
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var waveDisplayView: WaveDisplayView<Int>
+    lateinit var waveDisplayView: WaveDisplayView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

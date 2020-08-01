@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context="com.mlx.wavedisplay.MainActivity">
 
-    <cn.mlx.widget.WaveDisplayView
+    <com.mlx.widget.WaveDisplayView
         android:id="@+id/wave"
         app:dragColor="#fff"
         app:layout_constraintTop_toTopOf="parent"
@@ -14,6 +14,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    </cn.mlx.widget.WaveDisplayView>
+    </com.mlx.widget.WaveDisplayView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,18 +1,20 @@
-package cn.mlx.wavedisplay
+package com.mlx.wavedisplay
 
 import android.content.Context
 import android.view.ViewGroup
 import android.widget.ImageView
-import cn.mlx.widget.WaveAdapter
-import cn.mlx.widget.WaveDisplayView
+import cn.mlx.wavedisplay.R
+
 import coil.api.load
+import com.mlx.widget.WaveAdapter
+import com.mlx.widget.WaveDisplayView
 
 /**
  * Project:WaveDisPlay
  * Created by mlxCh on 2020/7/31.
  */
-class MyAdapter(context: Context, mList: MutableList<Int>) :
-    WaveAdapter<Int>(context, mList) {
+class MyAdapter(context: Context, var mList: MutableList<Int>) :
+    WaveAdapter(context) {
 
     val imgs = intArrayOf(
         R.mipmap.img0,
@@ -38,5 +40,6 @@ class MyAdapter(context: Context, mList: MutableList<Int>) :
     }
 
     override fun getItemViewType(i: Int): Int = 0
+    override fun getItemCount(): Int = mList.size
 
 }

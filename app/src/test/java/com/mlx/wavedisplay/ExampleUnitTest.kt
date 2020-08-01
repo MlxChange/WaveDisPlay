@@ -1,4 +1,4 @@
-package cn.mlx.wavedisplay
+package com.mlx.wavedisplay
 
 import org.junit.Test
 
