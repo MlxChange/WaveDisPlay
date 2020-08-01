@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group='com.github.mlxChange'
+group='com.github.MlxChange'
 android {
     compileSdkVersion 29
     buildToolsVersion "30.0.0"
