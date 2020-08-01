@@ -9,7 +9,7 @@ WaveDisPlayView is an Android list view that allows you to preview the next view
 
 ## Screenshot
 
-![](/screenshot/screenshot1.gif) ![](/screenshot/screenshot2.gif) ![](/screenshot/screenshot3.gif)
+![](/screenshot/screenshot1.gif)
 
 
 
@@ -35,8 +35,6 @@ dependencies {
 
 ```xml
 <com.mlx.widget.WaveDisplayView
-     app:layout_constraintTop_toTopOf="parent"
-     app:layout_constraintLeft_toLeftOf="parent"
      android:layout_width="match_parent"
      android:layout_height="match_parent">
 </com.mlx.widget.WaveDisplayView>
@@ -46,11 +44,6 @@ waveDisplayView = findViewById(R.id.wave)
 waveAdapter = MyAdapter(this, mData)
 waveDisplayView.setAdapter(waveAdapter)
 ```
-
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
 
 ## License
 
