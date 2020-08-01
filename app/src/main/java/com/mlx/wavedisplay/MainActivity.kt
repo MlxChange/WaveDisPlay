@@ -6,6 +6,7 @@ import android.view.WindowManager
 import cn.mlx.wavedisplay.R
 import com.mlx.widget.WaveDisplayView
 
+
 class MainActivity : AppCompatActivity() {
 
     lateinit var waveDisplayView: WaveDisplayView

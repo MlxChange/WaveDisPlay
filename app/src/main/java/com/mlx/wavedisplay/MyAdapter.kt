@@ -34,9 +34,7 @@ class MyAdapter(context: Context, var mList: MutableList<Int>) :
     override fun bindViewHolder(holder: WaveDisplayView.ViewHolder, position: Int) {
         val img = holder.itemView.findViewById<ImageView>(R.id.item_img)
         img.scaleType=ImageView.ScaleType.FIT_XY
-        img.load(imgs[position]){
-            crossfade(true)
-        }
+        img.load(imgs[position])
     }
 
     override fun getItemViewType(i: Int): Int = 0
