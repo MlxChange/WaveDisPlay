@@ -29,13 +29,11 @@ dependencies {
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-    </com.mlx.widget.WaveDisplayView>
+</com.mlx.widget.WaveDisplayView>
 ```
 ```kotlin
 waveDisplayView = findViewById(R.id.wave)
-val mData = mutableListOf(0,1,2,3,4,5,6)
-val waveAdapter = MyAdapter(this, mData)
+waveAdapter = MyAdapter(this, mData)
 waveDisplayView.setAdapter(waveAdapter)
 ```
 
@@ -45,7 +43,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 Please make sure to update tests as appropriate.
 
 ## License
-====
+
 <pre>
 Copyright 2020 MlxChange
 
