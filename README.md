@@ -9,7 +9,7 @@ WaveDisPlayView is an Android list view that allows you to preview the next view
 
 ## Screenshot
 
-![](/screenshot/screenshot.gif)
+<img src="https://img-blog.csdn.net/20161028230559575" width="540" height="1200" alt="screenshot"/>
 
 
 
