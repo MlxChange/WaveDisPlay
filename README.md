@@ -22,7 +22,6 @@ dependencies {
 
 ## Usage
 
-====
 ```xml
 <com.mlx.widget.WaveDisplayView
         app:layout_constraintTop_toTopOf="parent"
