@@ -8,7 +8,6 @@
 
     <com.mlx.widget.WaveDisplayView
         android:id="@+id/wave"
-        app:dragColor="#fff"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_width="match_parent"
