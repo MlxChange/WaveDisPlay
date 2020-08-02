@@ -45,6 +45,15 @@ waveAdapter = MyAdapter(this, mData)
 waveDisplayView.setAdapter(waveAdapter)
 ```
 
+
+## Attribute
+
+```
+dragColor //default white
+dragWidth //drag button width
+dragLocation //the starting position of the drag, the default is half of the height
+```
+
 ## License
 
 <pre>
