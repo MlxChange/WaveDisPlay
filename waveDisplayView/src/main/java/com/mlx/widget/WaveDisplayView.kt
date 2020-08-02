@@ -433,7 +433,6 @@ class WaveDisplayView @JvmOverloads constructor(
                 return super.drawChild(canvas, child, drawingTime)
             }
             if (child == getChildAt(childCount - 2)) {
-                child.setBackgroundColor(Color.BLACK)
                 return super.drawChild(canvas, child, drawingTime)
             }
         }
