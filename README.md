@@ -55,6 +55,14 @@ dragWidth //drag button width
 dragLocation //the starting position of the drag, the default is half of the height
 ```
 
+## About Me
+
+[My Blog](https://mlxchange.xyz "Mlx")
+
+[juejin](https://juejin.im/user/1345457961046055/ "Mlx")
+
+
+
 ## License
 
 <pre>
